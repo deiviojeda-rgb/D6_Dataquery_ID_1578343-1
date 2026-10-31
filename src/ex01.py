@@ -6,6 +6,11 @@
 import csv
 import sqlite3
 
+import os
+
+# Forces Python to change its working directory to the project root
+os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # --- Загрузка CSV в базу -------------------------------------------------
 # SQLite умеет держать базу прямо в памяти процесса — файл на диске не нужен.
 con = sqlite3.connect(":memory:")
@@ -43,12 +48,19 @@ for row in cur.execute("SELECT login, team FROM agents LIMIT 3"):
 
 print("2. Количество строк в справочнике")
 # TODO: один результат — используй .fetchone()
+print(con.execute("SELECT COUNT(*) FROM agents").fetchone())
 
 print("3. Три сотрудника, нанятых раньше всех")
 # TODO: логин и дата найма; подсказка — ORDER BY
+for row in cur.execute("SELECT login, hired_at FROM agents ORDER BY hired_at LIMIT 3"):
+    print(row)
 
 print("4. Количество строк по каждой смене")
 # TODO: подсказка — GROUP BY
+for row in cur.execute("SELECT team, COUNT(*) FROM agents GROUP BY team"):
+    print(row)
 
 print("5. Сотрудники, нанятые в 2025 году")
 # TODO: логин и дата найма; подсказка — WHERE
+for row in cur.execute(" SELECT login, hired_at FROM agents WHERE hired_at >= '2025-01-01' AND hired_at <= '2025-12-31'"):
+    print(row)

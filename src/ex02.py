@@ -19,7 +19,7 @@ def unicode_lower(text):
     функция не должна на нём падать.
     """
     # TODO
-    pass
+    return text.lower() if isinstance(text, str) else text 
 
 
 class Median:
@@ -35,11 +35,14 @@ class Median:
 
     def step(self, value):
         # TODO: сохрани значение (пропуски None не учитывай)
-        pass
+        if value is not None:
+            self.values.append(value)
 
     def finalize(self):
         # TODO: верни медиану собранных значений (или None, если их нет)
-        pass
+        if not self.values:
+            return None
+        return statistics.median(self.values)
 
 
 def main():
@@ -49,26 +52,71 @@ def main():
 
     print("1. Строк в справочнике и людей")
     # TODO: COUNT(*) и COUNT(DISTINCT login) в одном запросе, таблица agents
+    for row in con.execute(
+        "SELECT COUNT(*), COUNT(DISTINCT login) FROM agents"
+    ):
+        print(row)
 
     print("1a. Какая строка лишняя")
     # TODO: GROUP BY по всем полям справочника + HAVING
+    for row in con.execute(
+        """
+        SELECT id, login, team, hired_at, COUNT(*)
+        FROM agents
+        GROUP BY id, login, team, hired_at
+        HAVING COUNT(*) > 1
+        """
+    ):
+        print(row)
+         
 
     print("2. Смены, где меньше 6 человек")
     # TODO: GROUP BY + HAVING; считай людей, а не строки
+    for row in con.execute(
+        """
+        SELECT team, COUNT(DISTINCT login)
+        FROM agents
+        GROUP BY team
+        HAVING COUNT(DISTINCT login) < 6
+        """
+    ):
+        print(row)
 
     print("3. Каналы в сырой выгрузке: lower()")
     # TODO: таблица tickets, GROUP BY lower(channel), ORDER BY 1
+    for row in con.execute(
+        "SELECT lower(channel), COUNT(*) FROM tickets GROUP BY lower(channel) ORDER BY 1"
+    ):
+        print(row)
 
     print("3a. Каналы в сырой выгрузке: unicode_lower()")
     # TODO: то же со своей функцией
+    for row in con.execute(
+        "SELECT unicode_lower(channel), COUNT(*) FROM tickets GROUP BY unicode_lower(channel) ORDER BY 1"
+    ):
+        print(row)
 
     print("4. Время обработки до апреля: среднее и медиана")
     # TODO: таблица clean, WHERE period = 'до'; ROUND(AVG(handle_min), 1) и MEDIAN(handle_min) в одном запросе
     # Почему они так расходятся и какое число ты назовёшь руководителю:
     # ...
+    for row in con.execute(
+        """
+        SELECT ROUND(AVG(handle_min), 1), MEDIAN(handle_min)
+        FROM clean
+        WHERE period = 'до'
+        """
+    ):
+        print(row)
 
     print("5. Медиана: SQL и Python")
     # TODO: та же медиана своей MEDIAN и через statistics.median по значениям из запроса — в одной строке
+    sql_median = con.execute(
+        "SELECT MEDIAN(handle_min) FROM clean"
+    ).fetchone()[0]
+    values = [r[0] for r in con.execute("SELECT handle_min FROM clean WHERE handle_min IS NOT NULL")]
+    py_median = statistics.median(values)
+    print((sql_median, py_median))
 
 
 if __name__ == "__main__":
