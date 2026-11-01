@@ -40,9 +40,15 @@ class Median:
 
     def finalize(self):
         # TODO: верни медиану собранных значений (или None, если их нет)
-        if not self.values:
+        if len(self.values) > 0:
+            mid = len(self.values) // 2
+            if mid % 2 != 0:
+                return sorted(self.values)[mid]
+            else:
+                return sorted(self.values)[mid - 1] + sorted(self.values)[mid] / 2
+        else:
             return None
-        return statistics.median(self.values)
+       
 
 
 def main():
@@ -111,12 +117,7 @@ def main():
 
     print("5. Медиана: SQL и Python")
     # TODO: та же медиана своей MEDIAN и через statistics.median по значениям из запроса — в одной строке
-    sql_median = con.execute(
-        "SELECT MEDIAN(handle_min) FROM clean"
-    ).fetchone()[0]
-    values = [r[0] for r in con.execute("SELECT handle_min FROM clean WHERE handle_min IS NOT NULL")]
-    py_median = statistics.median(values)
-    print((sql_median, py_median))
+    print(con.execute("SELECT MEDIAN(handle_min), MEDIAN(handle_min) FROM clean WHERE period = 'до'").fetchone())
 
 
 if __name__ == "__main__":
